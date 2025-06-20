@@ -104,6 +104,13 @@ export class DirectRssService {
       try {
         console.log(`Fetching ${source.name}...`);
         const response = await fetch(`${CORS_PROXY}${encodeURIComponent(source.url)}`);
+        
+        // Skip if bad response
+        if (!response.ok) {
+          console.error(`HTTP ${response.status} for ${source.name}`);
+          continue;
+        }
+        
         const text = await response.text();
         
         // Parse XML

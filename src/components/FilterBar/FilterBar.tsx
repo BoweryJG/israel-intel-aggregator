@@ -7,6 +7,7 @@ import {
   TextField,
   InputAdornment,
   Typography,
+  Chip,
 } from '@mui/material';
 import {
   Search as SearchIcon,
@@ -14,6 +15,7 @@ import {
   Warning as WarningIcon,
   TrendingUp as TrendingUpIcon,
   Info as InfoIcon,
+  Bolt as BoltIcon,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { FeedFilter, UrgencyLevel } from '../../types';
@@ -149,29 +151,94 @@ export const FilterBar: React.FC<FilterBarProps> = ({ filter, onFilterChange }) 
 
           <Box sx={{ flexGrow: 1 }} />
 
-          <TextField
-            size="small"
-            placeholder="Search intel..."
-            value={filter.searchQuery || ''}
-            onChange={handleSearchChange}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon sx={{ color: 'text.secondary', fontSize: '1.2rem' }} />
-                </InputAdornment>
-              ),
-            }}
-            sx={{
-              width: 300,
-              '& .MuiInputBase-root': {
-                fontSize: '0.875rem',
-                backgroundColor: '#1F1F1F',
-                '& input': {
-                  fontFamily: 'JetBrains Mono',
+          <Stack direction="row" spacing={1}>
+            <ToggleButton
+              value="iran-conflict"
+              onClick={() => {
+                onFilterChange({ 
+                  ...filter, 
+                  searchQuery: 'iran missile strike',
+                  urgencyLevels: ['flash', 'priority'],
+                  timeRange: 'day'
+                });
+              }}
+              sx={{
+                px: 2,
+                py: 0.5,
+                fontSize: '0.75rem',
+                fontWeight: 600,
+                backgroundColor: '#FF4444',
+                color: 'white',
+                border: '1px solid #FF4444',
+                '&:hover': {
+                  backgroundColor: '#FF6666',
                 },
-              },
-            }}
-          />
+              }}
+            >
+              <Stack direction="row" spacing={0.5} alignItems="center">
+                <BoltIcon sx={{ fontSize: '1rem' }} />
+                <span>IRAN CONFLICT</span>
+              </Stack>
+            </ToggleButton>
+            
+            <TextField
+              size="small"
+              placeholder="Search intel..."
+              value={filter.searchQuery || ''}
+              onChange={handleSearchChange}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon sx={{ color: 'text.secondary', fontSize: '1.2rem' }} />
+                  </InputAdornment>
+                ),
+              }}
+              sx={{
+                width: 300,
+                '& .MuiInputBase-root': {
+                  fontSize: '0.875rem',
+                  backgroundColor: '#1F1F1F',
+                  '& input': {
+                    fontFamily: 'JetBrains Mono',
+                  },
+                },
+              }}
+            />
+          </Stack>
+        </Stack>
+        
+        <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
+          <Typography variant="caption" sx={{ color: 'text.secondary', mr: 1 }}>
+            QUICK SEARCH:
+          </Typography>
+          {[
+            { label: 'Missile Strike', query: 'missile strike' },
+            { label: 'Casualties', query: 'killed wounded casualties' },
+            { label: 'Iran IRGC', query: 'iran irgc revolutionary guard' },
+            { label: 'Hezbollah', query: 'hezbollah lebanon' },
+            { label: 'Gaza', query: 'gaza hamas' },
+            { label: 'Nuclear', query: 'nuclear uranium' },
+          ].map((item) => (
+            <Chip
+              key={item.label}
+              label={item.label}
+              size="small"
+              onClick={() => onFilterChange({ ...filter, searchQuery: item.query })}
+              sx={{
+                fontSize: '0.7rem',
+                height: 20,
+                backgroundColor: '#1F1F1F',
+                color: 'text.secondary',
+                '&:hover': {
+                  backgroundColor: '#3A7AFE20',
+                  color: '#3A7AFE',
+                },
+                '& .MuiChip-label': {
+                  px: 1,
+                },
+              }}
+            />
+          ))}
         </Stack>
       </Stack>
     </Box>
