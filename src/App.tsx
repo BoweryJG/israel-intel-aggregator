@@ -42,10 +42,10 @@ function App() {
   const [error, setError] = useState<string | null>(null);
   const [lastUpdate, setLastUpdate] = useState(new Date());
   const [filter, setFilter] = useState<FeedFilter>({
-    urgencyLevels: ['flash', 'priority', 'monitor'],
+    urgencyLevels: ['flash', 'priority', 'monitor', 'context'], // Show all by default
     contextTypes: [],
     verificationStatus: [],
-    timeRange: 'day',
+    timeRange: 'all', // Show all time by default
   });
 
   const rssService = RSSService.getInstance();
