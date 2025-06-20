@@ -61,18 +61,7 @@ export const IntelCard: React.FC<IntelCardProps> = ({ item, onClick }) => {
     tap: { scale: 0.98 },
   };
 
-  const glowAnimation = item.urgencyLevel === 'flash' ? {
-    boxShadow: [
-      `0 0 20px ${urgencyColor}40`,
-      `0 0 40px ${urgencyColor}60`,
-      `0 0 20px ${urgencyColor}40`,
-    ],
-    transition: {
-      duration: 2,
-      repeat: Infinity,
-      ease: 'easeInOut',
-    },
-  } : {};
+  // Removed unused glowAnimation - can be re-added when motion animations are implemented
 
   return (
     <motion.div
