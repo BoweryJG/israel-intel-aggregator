@@ -18,7 +18,7 @@ import {
   Bolt as BoltIcon,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
-import { FeedFilter, UrgencyLevel } from '../../types';
+import { FeedFilter, UrgencyLevel, SourceType } from '../../types';
 
 interface FilterBarProps {
   filter: FeedFilter;
@@ -37,6 +37,12 @@ const timeRangeOptions = [
   { value: 'day', label: '24H' },
   { value: 'week', label: '7D' },
   { value: 'all', label: 'ALL' },
+];
+
+const sourceOptions = [
+  { value: 'social', label: 'REDDIT', color: '#FF4500' },
+  { value: 'media_t1', label: 'MEDIA', color: '#3A7AFE' },
+  { value: 'military', label: 'MILITARY', color: '#D4AF37' },
 ];
 
 export const FilterBar: React.FC<FilterBarProps> = ({ filter, onFilterChange }) => {
@@ -60,6 +66,15 @@ export const FilterBar: React.FC<FilterBarProps> = ({ filter, onFilterChange }) 
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     onFilterChange({ ...filter, searchQuery: event.target.value });
+  };
+
+  const handleSourceChange = (
+    event: React.MouseEvent<HTMLElement>,
+    newSourceTypes: SourceType[] | null
+  ) => {
+    if (newSourceTypes !== null) {
+      onFilterChange({ ...filter, sourceTypes: newSourceTypes });
+    }
   };
 
   return (
@@ -119,6 +134,46 @@ export const FilterBar: React.FC<FilterBarProps> = ({ filter, onFilterChange }) 
 
         <Stack direction="row" spacing={2} alignItems="center">
           <Typography variant="caption" sx={{ color: 'text.secondary', minWidth: 80 }}>
+            SOURCE:
+          </Typography>
+          <ToggleButtonGroup
+            value={filter.sourceTypes || []}
+            onChange={handleSourceChange}
+            aria-label="source types"
+            size="small"
+            sx={{
+              '& .MuiToggleButton-root': {
+                px: 2,
+                py: 0.5,
+                fontSize: '0.75rem',
+                fontWeight: 600,
+                backgroundColor: '#1F1F1F',
+                '&.Mui-selected': {
+                  backgroundColor: 'transparent',
+                },
+              },
+            }}
+          >
+            {sourceOptions.map((option) => (
+              <ToggleButton
+                key={option.value}
+                value={option.value}
+                sx={{
+                  '&.Mui-selected': {
+                    color: option.color,
+                    borderColor: option.color,
+                    backgroundColor: `${option.color}20 !important`,
+                  },
+                }}
+              >
+                {option.label}
+              </ToggleButton>
+            ))}
+          </ToggleButtonGroup>
+        </Stack>
+
+        <Stack direction="row" spacing={2} alignItems="center">
+          <Typography variant="caption" sx={{ color: 'text.secondary', minWidth: 80 }}>
             TIME:
           </Typography>
           <ToggleButtonGroup
@@ -153,13 +208,42 @@ export const FilterBar: React.FC<FilterBarProps> = ({ filter, onFilterChange }) 
 
           <Stack direction="row" spacing={1}>
             <ToggleButton
+              value="reddit-only"
+              onClick={() => {
+                onFilterChange({ 
+                  ...filter, 
+                  sourceTypes: ['social'],
+                  timeRange: 'day'
+                });
+              }}
+              sx={{
+                px: 2,
+                py: 0.5,
+                fontSize: '0.75rem',
+                fontWeight: 600,
+                backgroundColor: '#FF4500',
+                color: 'white',
+                border: '1px solid #FF4500',
+                '&:hover': {
+                  backgroundColor: '#FF6600',
+                },
+              }}
+            >
+              <Stack direction="row" spacing={0.5} alignItems="center">
+                <span>🔥</span>
+                <span>REDDIT ONLY</span>
+              </Stack>
+            </ToggleButton>
+            
+            <ToggleButton
               value="iran-conflict"
               onClick={() => {
                 onFilterChange({ 
                   ...filter, 
                   searchQuery: 'iran missile strike',
                   urgencyLevels: ['flash', 'priority'],
-                  timeRange: 'day'
+                  timeRange: 'day',
+                  sourceTypes: []
                 });
               }}
               sx={{

@@ -87,6 +87,13 @@ function App() {
       filter.urgencyLevels.includes(item.urgencyLevel)
     );
 
+    // Filter by source types
+    if (filter.sourceTypes && filter.sourceTypes.length > 0) {
+      filtered = filtered.filter(item =>
+        filter.sourceTypes!.includes(item.sourceCredibility.source)
+      );
+    }
+
     // Filter by time range
     const now = new Date();
     const timeFilter = {
@@ -110,6 +117,23 @@ function App() {
         item.tags.some(tag => tag.toLowerCase().includes(query))
       );
     }
+
+    // Sort with Reddit priority
+    filtered.sort((a, b) => {
+      // First priority: Urgency level
+      const urgencyOrder = { flash: 0, priority: 1, monitor: 2, context: 3 };
+      const urgencyDiff = urgencyOrder[a.urgencyLevel] - urgencyOrder[b.urgencyLevel];
+      if (urgencyDiff !== 0) return urgencyDiff;
+      
+      // Second priority: Reddit content
+      const aIsReddit = a.sourceCredibility.source === 'social';
+      const bIsReddit = b.sourceCredibility.source === 'social';
+      if (aIsReddit && !bIsReddit) return -1;
+      if (!aIsReddit && bIsReddit) return 1;
+      
+      // Third priority: Timestamp
+      return b.timestamp.getTime() - a.timestamp.getTime();
+    });
 
     setFilteredItems(filtered);
   }, [intelItems, filter]);

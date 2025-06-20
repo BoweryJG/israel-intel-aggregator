@@ -39,7 +39,7 @@ const sourceIcons = {
   intelligence: '👁️',
   media_t1: '✓',
   media_t2: '•',
-  social: '◦',
+  social: '🔥',
 };
 
 export const IntelCard: React.FC<IntelCardProps> = ({ item, onClick }) => {
@@ -117,10 +117,12 @@ export const IntelCard: React.FC<IntelCardProps> = ({ item, onClick }) => {
                     icon={<Box component="span" sx={{ fontSize: '0.9rem' }}>{sourceIcons[item.sourceCredibility.source]}</Box>}
                     label={item.source.name}
                     size="small"
-                    variant="outlined"
+                    variant={item.sourceCredibility.source === 'social' ? 'filled' : 'outlined'}
                     sx={{
-                      borderColor: `${sourceColor}40`,
-                      color: sourceColor,
+                      borderColor: item.sourceCredibility.source === 'social' ? 'transparent' : `${sourceColor}40`,
+                      backgroundColor: item.sourceCredibility.source === 'social' ? '#FF450020' : 'transparent',
+                      color: item.sourceCredibility.source === 'social' ? '#FF4500' : sourceColor,
+                      fontWeight: item.sourceCredibility.source === 'social' ? 600 : 400,
                     }}
                   />
                   {item.verificationStatus === 'verified' && (

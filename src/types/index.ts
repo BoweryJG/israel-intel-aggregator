@@ -49,4 +49,6 @@ export interface FeedFilter {
   verificationStatus: VerificationStatus[];
   timeRange: 'hour' | 'day' | 'week' | 'all';
   searchQuery?: string;
+  sourceTypes?: SourceType[];
+  sourceNames?: string[];
 }
