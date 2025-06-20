@@ -10,6 +10,7 @@ interface RSSSource {
 }
 
 const RSS_SOURCES: RSSSource[] = [
+  // Israeli Media
   {
     url: 'https://www.timesofisrael.com/feed/',
     name: 'Times of Israel',
@@ -24,6 +25,64 @@ const RSS_SOURCES: RSSSource[] = [
     url: 'https://www.israelnationalnews.com/rss.aspx',
     name: 'Arutz Sheva',
     type: 'media_t2',
+  },
+  {
+    url: 'https://www.haaretz.com/cmlink/1.4537136',
+    name: 'Haaretz',
+    type: 'media_t1',
+  },
+  // International Coverage
+  {
+    url: 'https://feeds.bbci.co.uk/news/world/middle_east/rss.xml',
+    name: 'BBC Middle East',
+    type: 'media_t1',
+  },
+  {
+    url: 'https://www.aljazeera.com/xml/rss/all.xml',
+    name: 'Al Jazeera',
+    type: 'media_t2',
+  },
+  {
+    url: 'https://rss.cnn.com/rss/cnn_world.rss',
+    name: 'CNN World',
+    type: 'media_t2',
+  },
+  // Reddit Feeds - Conflict/Military/Intelligence
+  {
+    url: 'https://www.reddit.com/r/worldnews/.rss?limit=50',
+    name: 'r/worldnews',
+    type: 'social',
+  },
+  {
+    url: 'https://www.reddit.com/r/geopolitics/.rss?limit=30',
+    name: 'r/geopolitics',
+    type: 'social',
+  },
+  {
+    url: 'https://www.reddit.com/r/CredibleDefense/.rss?limit=30',
+    name: 'r/CredibleDefense',
+    type: 'social',
+  },
+  {
+    url: 'https://www.reddit.com/r/LevantineWar/.rss?limit=30',
+    name: 'r/LevantineWar',
+    type: 'social',
+  },
+  {
+    url: 'https://www.reddit.com/r/IsraelPalestine/.rss?limit=30',
+    name: 'r/IsraelPalestine',
+    type: 'social',
+  },
+  // Military/Defense
+  {
+    url: 'https://www.defensenews.com/arc/outboundfeeds/rss/?outputType=xml',
+    name: 'Defense News',
+    type: 'military',
+  },
+  {
+    url: 'https://www.janes.com/feeds/news',
+    name: 'Janes Defense',
+    type: 'military',
   },
 ];
 
@@ -58,16 +117,39 @@ export class DirectRssService {
           continue;
         }
         
-        // Extract items
-        const items = xml.querySelectorAll('item');
+        // Extract items - handle both regular RSS and Reddit's Atom format
+        let items = xml.querySelectorAll('item');
+        
+        // If no items, try Atom format (Reddit uses this)
+        if (items.length === 0) {
+          items = xml.querySelectorAll('entry');
+        }
+        
         console.log(`Found ${items.length} items from ${source.name}`);
         
         items.forEach((item, index) => {
-          if (index < 20) { // Limit to 20 items per source
-            const title = item.querySelector('title')?.textContent || '';
-            const description = item.querySelector('description')?.textContent || '';
-            const link = item.querySelector('link')?.textContent || '';
-            const pubDate = item.querySelector('pubDate')?.textContent || '';
+          // Higher limit for social media sources to catch more updates
+          const itemLimit = source.type === 'social' ? 30 : 20;
+          if (index < itemLimit) {
+            // Standard RSS
+            let title = item.querySelector('title')?.textContent || '';
+            let description = item.querySelector('description')?.textContent || '';
+            let link = item.querySelector('link')?.textContent || '';
+            let pubDate = item.querySelector('pubDate')?.textContent || '';
+            
+            // Atom format (Reddit)
+            if (!pubDate) {
+              pubDate = item.querySelector('published')?.textContent || '';
+            }
+            if (!description) {
+              description = item.querySelector('content')?.textContent || '';
+            }
+            if (!link && item.querySelector('link')) {
+              link = item.querySelector('link')?.getAttribute('href') || '';
+            }
+            
+            // Skip if no title
+            if (!title) return;
             
             const intelItem = this.createIntelItem(
               title,
@@ -137,29 +219,58 @@ export class DirectRssService {
   private determineUrgency(title: string, content: string): UrgencyLevel {
     const text = `${title} ${content}`.toLowerCase();
     
+    // FLASH - Immediate threats/attacks
     if (
       text.includes('breaking') ||
       text.includes('urgent') ||
       text.includes('explosion') ||
       text.includes('attack') ||
-      text.includes('siren')
+      text.includes('siren') ||
+      text.includes('missile') ||
+      text.includes('rocket') ||
+      text.includes('strike') ||
+      text.includes('killed') ||
+      text.includes('casualties') ||
+      text.includes('intercepted') ||
+      text.includes('ballistic') ||
+      text.includes('drone attack') ||
+      text.includes('air raid')
     ) {
       return 'flash';
     }
     
+    // PRIORITY - Military/Security developments
     if (
       text.includes('idf') ||
       text.includes('military') ||
       text.includes('security') ||
-      text.includes('operation')
+      text.includes('operation') ||
+      text.includes('iran') ||
+      text.includes('hezbollah') ||
+      text.includes('hamas') ||
+      text.includes('pentagon') ||
+      text.includes('deployment') ||
+      text.includes('retaliation') ||
+      text.includes('escalation') ||
+      text.includes('nuclear') ||
+      text.includes('uranium') ||
+      text.includes('irgc') ||
+      text.includes('revolutionary guard')
     ) {
       return 'priority';
     }
     
+    // MONITOR - Important developments
     if (
       text.includes('minister') ||
       text.includes('government') ||
-      text.includes('economy')
+      text.includes('economy') ||
+      text.includes('sanctions') ||
+      text.includes('diplomatic') ||
+      text.includes('united nations') ||
+      text.includes('biden') ||
+      text.includes('netanyahu') ||
+      text.includes('khamenei')
     ) {
       return 'monitor';
     }
@@ -196,13 +307,41 @@ export class DirectRssService {
     const text = `${title} ${content}`.toLowerCase();
     const tags = [];
     
+    // Locations
     if (text.includes('gaza')) tags.push('Gaza');
     if (text.includes('lebanon')) tags.push('Lebanon');
     if (text.includes('iran')) tags.push('Iran');
+    if (text.includes('syria')) tags.push('Syria');
+    if (text.includes('yemen')) tags.push('Yemen');
+    if (text.includes('iraq')) tags.push('Iraq');
+    if (text.includes('jerusalem')) tags.push('Jerusalem');
+    if (text.includes('tel aviv')) tags.push('Tel Aviv');
+    if (text.includes('tehran')) tags.push('Tehran');
+    
+    // Organizations
     if (text.includes('idf')) tags.push('IDF');
     if (text.includes('hamas')) tags.push('Hamas');
-    if (text.includes('jerusalem')) tags.push('Jerusalem');
+    if (text.includes('hezbollah')) tags.push('Hezbollah');
+    if (text.includes('irgc') || text.includes('revolutionary guard')) tags.push('IRGC');
+    if (text.includes('houthis')) tags.push('Houthis');
     
-    return tags;
+    // Military terms
+    if (text.includes('missile')) tags.push('Missiles');
+    if (text.includes('drone')) tags.push('Drones');
+    if (text.includes('nuclear')) tags.push('Nuclear');
+    if (text.includes('f-35') || text.includes('f35')) tags.push('F-35');
+    if (text.includes('iron dome')) tags.push('Iron Dome');
+    
+    // Conflict terms
+    if (text.includes('escalation')) tags.push('Escalation');
+    if (text.includes('retaliation')) tags.push('Retaliation');
+    if (text.includes('casualties')) tags.push('Casualties');
+    
+    // Key figures
+    if (text.includes('netanyahu')) tags.push('Netanyahu');
+    if (text.includes('khamenei')) tags.push('Khamenei');
+    if (text.includes('biden')) tags.push('Biden');
+    
+    return Array.from(new Set(tags)); // Remove duplicates
   }
 }
