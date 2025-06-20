@@ -22,12 +22,14 @@ import {
   Analytics as AnalyticsIcon,
   Map as MapIcon,
   Timeline as TimelineIcon,
+  Storage as StorageIcon,
 } from '@mui/icons-material';
 import { AnimatePresence, motion } from 'framer-motion';
 import { theme } from './theme';
 import { CommandBar } from './components/CommandBar';
 import { FilterBar } from './components/FilterBar';
 import { IntelCard } from './components/IntelCard';
+import { DataManager } from './components/DataManager';
 import { DirectRssService } from './services/directRssService';
 import { IntelItem, FeedFilter } from './types';
 
@@ -36,6 +38,7 @@ const REFRESH_INTERVAL = 60000; // 1 minute
 
 function App() {
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [dataManagerOpen, setDataManagerOpen] = useState(false);
   const [intelItems, setIntelItems] = useState<IntelItem[]>([]);
   const [filteredItems, setFilteredItems] = useState<IntelItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -210,6 +213,18 @@ function App() {
       <Divider sx={{ my: 2 }} />
       <List>
         <ListItem
+          sx={{ cursor: 'pointer' }}
+          onClick={() => {
+            setDrawerOpen(false);
+            setDataManagerOpen(true);
+          }}
+        >
+          <ListItemIcon>
+            <StorageIcon />
+          </ListItemIcon>
+          <ListItemText primary="Data Manager" />
+        </ListItem>
+        <ListItem
           sx={{ cursor: 'pointer', opacity: 0.5 }}
           onClick={() => {
             setDrawerOpen(false);
@@ -270,7 +285,16 @@ function App() {
           {isUsingCache && (
             <Box sx={{ px: 3, py: 1 }}>
               <Alert severity="info" sx={{ backgroundColor: 'rgba(33, 150, 243, 0.1)' }}>
-                Showing cached data. Fresh updates loading in background...
+                {(() => {
+                  const cacheInfo = rssService.getCacheInfo();
+                  if (cacheInfo.ageHours < 1) {
+                    return `Showing ${cacheInfo.itemCount} cached items from less than an hour ago`;
+                  } else if (cacheInfo.isStale) {
+                    return `Showing ${cacheInfo.itemCount} cached items from ${cacheInfo.ageHours} hours ago. Refreshing in background...`;
+                  } else {
+                    return `Showing ${cacheInfo.itemCount} cached items from ${cacheInfo.ageHours} hours ago`;
+                  }
+                })()}
               </Alert>
             </Box>
           )}
@@ -324,6 +348,12 @@ function App() {
             {error}
           </Alert>
         </Snackbar>
+
+        <DataManager
+          open={dataManagerOpen}
+          onClose={() => setDataManagerOpen(false)}
+          onDataUpdate={() => fetchIntelData(true)}
+        />
       </Box>
     </ThemeProvider>
   );

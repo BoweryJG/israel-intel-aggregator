@@ -97,8 +97,9 @@ export class DirectRssService {
   private static instance: DirectRssService;
   private cache: IntelItem[] = [];
   private lastFetchTime: number = 0;
-  private CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+  private CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours
   private STORAGE_KEY = 'israel-intel-cache';
+  private STORAGE_VERSION = 'v2'; // Version for cache migration
 
   constructor() {
     this.loadFromCache();
@@ -115,36 +116,82 @@ export class DirectRssService {
     try {
       const cached = localStorage.getItem(this.STORAGE_KEY);
       if (cached) {
-        const { items, timestamp } = JSON.parse(cached);
+        const data = JSON.parse(cached);
+        
+        // Check cache version
+        if (data.version !== this.STORAGE_VERSION) {
+          console.log('Cache version mismatch, clearing old cache');
+          localStorage.removeItem(this.STORAGE_KEY);
+          return;
+        }
+        
+        const { items, timestamp } = data;
         // Convert date strings back to Date objects
         this.cache = items.map((item: any) => ({
           ...item,
           timestamp: new Date(item.timestamp)
         }));
         this.lastFetchTime = timestamp;
-        console.log(`Loaded ${this.cache.length} items from cache`);
+        console.log(`Loaded ${this.cache.length} items from cache (age: ${this.getCacheAge()} hours)`);
       }
     } catch (error) {
       console.error('Error loading cache:', error);
+      localStorage.removeItem(this.STORAGE_KEY);
     }
   }
 
   private saveToCache(items: IntelItem[]): void {
     try {
+      // Merge new items with existing cache to preserve history
+      const existingIds = new Set(items.map(item => item.id));
+      const oldItems = this.cache.filter(item => !existingIds.has(item.id));
+      const mergedItems = [...items, ...oldItems]
+        .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
+        .slice(0, 1000); // Keep up to 1000 items
+      
       localStorage.setItem(this.STORAGE_KEY, JSON.stringify({
-        items: items.slice(0, 500), // Keep max 500 items to avoid storage limits
+        version: this.STORAGE_VERSION,
+        items: mergedItems,
         timestamp: Date.now()
       }));
+      
+      console.log(`Saved ${mergedItems.length} items to cache`);
     } catch (error) {
       console.error('Error saving cache:', error);
+      // If storage is full, try to save fewer items
+      try {
+        localStorage.setItem(this.STORAGE_KEY, JSON.stringify({
+          version: this.STORAGE_VERSION,
+          items: items.slice(0, 250),
+          timestamp: Date.now()
+        }));
+      } catch (retryError) {
+        console.error('Failed to save even reduced cache:', retryError);
+      }
     }
+  }
+
+  private getCacheAge(): number {
+    const ageMs = Date.now() - this.lastFetchTime;
+    return Math.round(ageMs / (1000 * 60 * 60)); // Convert to hours
   }
 
   async fetchNews(forceRefresh: boolean = false): Promise<IntelItem[]> {
     // Return cached data if it's still fresh and not forcing refresh
     const now = Date.now();
-    if (!forceRefresh && this.cache.length > 0 && (now - this.lastFetchTime) < this.CACHE_DURATION) {
-      console.log('Returning cached data');
+    const cacheAge = now - this.lastFetchTime;
+    const isStale = cacheAge > this.CACHE_DURATION;
+    
+    // Always return cache first if available
+    if (this.cache.length > 0 && !forceRefresh) {
+      console.log(`Returning ${this.cache.length} cached items (age: ${this.getCacheAge()} hours, stale: ${isStale})`);
+      
+      // If cache is stale, trigger background refresh
+      if (isStale) {
+        console.log('Cache is stale, triggering background refresh...');
+        this.backgroundRefresh();
+      }
+      
       return this.cache;
     }
 
@@ -258,6 +305,29 @@ export class DirectRssService {
 
   getCachedNews(): IntelItem[] {
     return this.cache;
+  }
+
+  private async backgroundRefresh(): Promise<void> {
+    // Don't block - run in background
+    setTimeout(async () => {
+      try {
+        console.log('Starting background refresh...');
+        await this.fetchNews(true);
+        console.log('Background refresh completed');
+      } catch (error) {
+        console.error('Background refresh failed:', error);
+      }
+    }, 100);
+  }
+
+  getCacheInfo(): { itemCount: number; ageHours: number; isStale: boolean } {
+    const ageHours = this.getCacheAge();
+    const isStale = (Date.now() - this.lastFetchTime) > this.CACHE_DURATION;
+    return {
+      itemCount: this.cache.length,
+      ageHours,
+      isStale
+    };
   }
 
   private createIntelItem(
