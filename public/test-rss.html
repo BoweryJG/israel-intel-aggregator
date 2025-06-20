@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>RSS Feed Test</title>
+</head>
+<body>
+    <h1>Testing RSS Feeds</h1>
+    <div id="results"></div>
+    
+    <script>
+        async function testFeeds() {
+            const feeds = [
+                'https://www.timesofisrael.com/feed/',
+                'https://rss.jpost.com/rss/rssfeedsfrontpage.aspx',
+                'https://www.israelnationalnews.com/rss.aspx'
+            ];
+            
+            const results = document.getElementById('results');
+            
+            for (const feed of feeds) {
+                try {
+                    const url = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feed)}`;
+                    const response = await fetch(url);
+                    const data = await response.json();
+                    
+                    results.innerHTML += `
+                        <h2>${feed}</h2>
+                        <p>Status: ${data.status}</p>
+                        <p>Items: ${data.items ? data.items.length : 0}</p>
+                        <ul>
+                            ${data.items ? data.items.slice(0, 3).map(item => 
+                                `<li>${item.title} - ${new Date(item.pubDate).toLocaleString()}</li>`
+                            ).join('') : '<li>No items</li>'}
+                        </ul>
+                        <hr>
+                    `;
+                } catch (error) {
+                    results.innerHTML += `<p>Error testing ${feed}: ${error.message}</p>`;
+                }
+            }
+        }
+        
+        testFeeds();
+    </script>
+</body>
+</html>
