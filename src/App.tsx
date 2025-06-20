@@ -28,7 +28,7 @@ import { theme } from './theme';
 import { CommandBar } from './components/CommandBar';
 import { FilterBar } from './components/FilterBar';
 import { IntelCard } from './components/IntelCard';
-import { RSSService } from './services/rssService';
+import { NewsApiService } from './services/newsApiService';
 import { IntelItem, FeedFilter } from './types';
 
 const DRAWER_WIDTH = 240;
@@ -48,22 +48,24 @@ function App() {
     timeRange: 'all', // Show all time by default
   });
 
-  const rssService = RSSService.getInstance();
+  const newsService = NewsApiService.getInstance();
 
   const fetchIntelData = useCallback(async () => {
     try {
       setLoading(true);
-      const items = await rssService.fetchAllFeeds();
+      console.log('Fetching intel data...');
+      const items = await newsService.fetchAllNews();
+      console.log('Fetched items:', items.length);
       setIntelItems(items);
       setLastUpdate(new Date());
       setError(null);
     } catch (err) {
       setError('Failed to fetch intelligence data');
-      console.error(err);
+      console.error('Fetch error:', err);
     } finally {
       setLoading(false);
     }
-  }, [rssService]);
+  }, [newsService]);
 
   useEffect(() => {
     fetchIntelData();
