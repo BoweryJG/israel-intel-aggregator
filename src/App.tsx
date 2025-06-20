@@ -28,7 +28,7 @@ import { theme } from './theme';
 import { CommandBar } from './components/CommandBar';
 import { FilterBar } from './components/FilterBar';
 import { IntelCard } from './components/IntelCard';
-import { RealTimeRssService } from './services/realTimeRssService';
+import { DirectRssService } from './services/directRssService';
 import { IntelItem, FeedFilter } from './types';
 
 const DRAWER_WIDTH = 240;
@@ -48,13 +48,13 @@ function App() {
     timeRange: 'all', // Show all time by default
   });
 
-  const rssService = RealTimeRssService.getInstance();
+  const rssService = DirectRssService.getInstance();
 
   const fetchIntelData = useCallback(async () => {
     try {
       setLoading(true);
-      console.log('Fetching LIVE news from RSS2JSON API...');
-      const items = await rssService.fetchLiveNews();
+      console.log('Fetching LIVE news via AllOrigins CORS proxy...');
+      const items = await rssService.fetchNews();
       console.log(`Received ${items.length} live news items`);
       
       setIntelItems(items);

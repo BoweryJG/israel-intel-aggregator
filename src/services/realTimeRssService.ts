@@ -27,7 +27,7 @@ export class RealTimeRssService {
     // Fetch feeds in parallel
     const promises = feeds.map(async (feedUrl) => {
       try {
-        const url = `${RSS2JSON_BASE}?rss_url=${encodeURIComponent(feedUrl)}&api_key=DEMO&count=20`;
+        const url = `${RSS2JSON_BASE}?rss_url=${encodeURIComponent(feedUrl)}`;
         const response = await fetch(url);
         const data = await response.json();
 
