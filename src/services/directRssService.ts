@@ -1,7 +1,14 @@
 import { IntelItem, UrgencyLevel, SourceType } from '../types';
 
-// Using AllOrigins CORS proxy - more reliable than others
-const CORS_PROXY = 'https://api.allorigins.win/raw?url=';
+// Multiple CORS proxies for fallback
+const CORS_PROXIES = [
+  '/.netlify/functions/rss-proxy?url=', // Try local Netlify function first
+  'https://corsproxy.io/?',
+  'https://api.codetabs.com/v1/proxy?quest=',
+  'https://thingproxy.freeboard.io/fetch/',
+  'https://proxy.cors.sh/',
+  'https://cors-anywhere.herokuapp.com/'
+];
 
 interface RSSSource {
   url: string;
@@ -101,76 +108,94 @@ export class DirectRssService {
     const allItems: IntelItem[] = [];
 
     for (const source of RSS_SOURCES) {
-      try {
-        console.log(`Fetching ${source.name}...`);
-        const response = await fetch(`${CORS_PROXY}${encodeURIComponent(source.url)}`);
-        
-        // Skip if bad response
-        if (!response.ok) {
-          console.error(`HTTP ${response.status} for ${source.name}`);
-          continue;
-        }
-        
-        const text = await response.text();
-        
-        // Parse XML
-        const parser = new DOMParser();
-        const xml = parser.parseFromString(text, 'text/xml');
-        
-        // Check for parse errors
-        const parseError = xml.querySelector('parsererror');
-        if (parseError) {
-          console.error(`XML parse error for ${source.name}`);
-          continue;
-        }
-        
-        // Extract items - handle both regular RSS and Reddit's Atom format
-        let items = xml.querySelectorAll('item');
-        
-        // If no items, try Atom format (Reddit uses this)
-        if (items.length === 0) {
-          items = xml.querySelectorAll('entry');
-        }
-        
-        console.log(`Found ${items.length} items from ${source.name}`);
-        
-        items.forEach((item, index) => {
-          // Higher limit for social media sources to catch more updates
-          const itemLimit = source.type === 'social' ? 30 : 20;
-          if (index < itemLimit) {
-            // Standard RSS
-            let title = item.querySelector('title')?.textContent || '';
-            let description = item.querySelector('description')?.textContent || '';
-            let link = item.querySelector('link')?.textContent || '';
-            let pubDate = item.querySelector('pubDate')?.textContent || '';
-            
-            // Atom format (Reddit)
-            if (!pubDate) {
-              pubDate = item.querySelector('published')?.textContent || '';
-            }
-            if (!description) {
-              description = item.querySelector('content')?.textContent || '';
-            }
-            if (!link && item.querySelector('link')) {
-              link = item.querySelector('link')?.getAttribute('href') || '';
-            }
-            
-            // Skip if no title
-            if (!title) return;
-            
-            const intelItem = this.createIntelItem(
-              title,
-              description,
-              link,
-              pubDate,
-              source
-            );
-            
-            allItems.push(intelItem);
+      let fetchSuccess = false;
+      
+      // Try each proxy until one works
+      for (const proxy of CORS_PROXIES) {
+        try {
+          const proxyName = proxy.includes('netlify') ? 'Netlify function' : proxy.split('/')[2];
+          console.log(`Fetching ${source.name} via ${proxyName}...`);
+          const response = await fetch(`${proxy}${encodeURIComponent(source.url)}`, {
+            signal: AbortSignal.timeout(8000) // 8 second timeout
+          });
+          
+          // Skip if bad response
+          if (!response.ok) {
+            console.error(`HTTP ${response.status} for ${source.name} via ${proxyName}`);
+            continue;
           }
-        });
-      } catch (error) {
-        console.error(`Error fetching ${source.name}:`, error);
+          
+          const text = await response.text();
+          
+          // Parse XML
+          const parser = new DOMParser();
+          const xml = parser.parseFromString(text, 'text/xml');
+          
+          // Check for parse errors
+          const parseError = xml.querySelector('parsererror');
+          if (parseError) {
+            console.error(`XML parse error for ${source.name}`);
+            continue;
+          }
+          
+          // Extract items - handle both regular RSS and Reddit's Atom format
+          let items = xml.querySelectorAll('item');
+          
+          // If no items, try Atom format (Reddit uses this)
+          if (items.length === 0) {
+            items = xml.querySelectorAll('entry');
+          }
+          
+          console.log(`Found ${items.length} items from ${source.name}`);
+          
+          items.forEach((item, index) => {
+            // Higher limit for social media sources to catch more updates
+            const itemLimit = source.type === 'social' ? 30 : 20;
+            if (index < itemLimit) {
+              // Standard RSS
+              let title = item.querySelector('title')?.textContent || '';
+              let description = item.querySelector('description')?.textContent || '';
+              let link = item.querySelector('link')?.textContent || '';
+              let pubDate = item.querySelector('pubDate')?.textContent || '';
+              
+              // Atom format (Reddit)
+              if (!pubDate) {
+                pubDate = item.querySelector('published')?.textContent || '';
+              }
+              if (!description) {
+                description = item.querySelector('content')?.textContent || '';
+              }
+              if (!link && item.querySelector('link')) {
+                link = item.querySelector('link')?.getAttribute('href') || '';
+              }
+              
+              // Skip if no title
+              if (!title) return;
+              
+              const intelItem = this.createIntelItem(
+                title,
+                description,
+                link,
+                pubDate,
+                source
+              );
+              
+              allItems.push(intelItem);
+            }
+          });
+          
+          fetchSuccess = true;
+          break; // Successfully fetched from this proxy, move to next source
+          
+        } catch (error) {
+          const proxyName = proxy.includes('netlify') ? 'Netlify function' : proxy.split('/')[2];
+          console.error(`Error with ${proxyName} for ${source.name}:`, error);
+          // Continue to next proxy
+        }
+      }
+      
+      if (!fetchSuccess) {
+        console.error(`All proxies failed for ${source.name}`);
       }
     }
 

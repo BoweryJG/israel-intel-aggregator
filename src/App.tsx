@@ -54,7 +54,7 @@ function App() {
   const fetchIntelData = useCallback(async () => {
     try {
       setLoading(true);
-      console.log('Fetching LIVE news via AllOrigins CORS proxy...');
+      console.log('Fetching LIVE news via CORS proxy...');
       const items = await rssService.fetchNews();
       console.log(`Received ${items.length} live news items`);
       
