@@ -1,23 +1,6 @@
 import { IntelItem, UrgencyLevel, SourceType } from '../types';
 
-// Using Feedly API - a professional RSS aggregator service
-const FEEDLY_STREAMS = [
-  {
-    streamId: 'feed/https://www.timesofisrael.com/feed/',
-    name: 'Times of Israel',
-    type: 'media_t1' as SourceType,
-  },
-  {
-    streamId: 'feed/https://rss.jpost.com/rss/rssfeedsfrontpage.aspx',
-    name: 'Jerusalem Post', 
-    type: 'media_t1' as SourceType,
-  },
-];
-
-// Alternative: NewsAPI.org endpoint (requires free API key)
-const NEWSAPI_URL = 'https://newsapi.org/v2/everything?q=Israel&domains=timesofisrael.com,jpost.com&sortBy=publishedAt&apiKey=YOUR_API_KEY';
-
-// Alternative: Use RSS2JSON free tier
+// Use RSS2JSON free tier
 const RSS2JSON_BASE = 'https://api.rss2json.com/v1/api.json';
 
 export class RealTimeRssService {
