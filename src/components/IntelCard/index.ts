@@ -1,0 +1,1 @@
+export { IntelCard } from './IntelCard';
