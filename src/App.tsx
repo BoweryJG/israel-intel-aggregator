@@ -28,7 +28,7 @@ import { theme } from './theme';
 import { CommandBar } from './components/CommandBar';
 import { FilterBar } from './components/FilterBar';
 import { IntelCard } from './components/IntelCard';
-import { NewsApiService } from './services/newsApiService';
+import { LiveRssService } from './services/liveRssService';
 import { IntelItem, FeedFilter } from './types';
 
 const DRAWER_WIDTH = 240;
@@ -48,24 +48,30 @@ function App() {
     timeRange: 'all', // Show all time by default
   });
 
-  const newsService = NewsApiService.getInstance();
+  const rssService = LiveRssService.getInstance();
 
   const fetchIntelData = useCallback(async () => {
     try {
       setLoading(true);
-      console.log('Fetching intel data...');
-      const items = await newsService.fetchAllNews();
-      console.log('Fetched items:', items.length);
-      setIntelItems(items);
+      console.log('Fetching REAL LIVE RSS feeds...');
+      const items = await rssService.fetchRealNews();
+      console.log(`Got ${items.length} REAL news items`);
+      
+      if (items.length === 0) {
+        setError('No live feeds available - check connection');
+      } else {
+        setIntelItems(items);
+        setError(null);
+      }
+      
       setLastUpdate(new Date());
-      setError(null);
     } catch (err) {
-      setError('Failed to fetch intelligence data');
+      setError('Failed to fetch live RSS feeds');
       console.error('Fetch error:', err);
     } finally {
       setLoading(false);
     }
-  }, [newsService]);
+  }, [rssService]);
 
   useEffect(() => {
     fetchIntelData();
