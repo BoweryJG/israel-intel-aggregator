@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test AllOrigins CORS Proxy</title>
+</head>
+<body>
+    <h1>Testing AllOrigins CORS Proxy</h1>
+    <div id="results"></div>
+    
+    <script>
+        async function testAllOrigins() {
+            const CORS_PROXY = 'https://api.allorigins.win/raw?url=';
+            const feeds = [
+                'https://www.timesofisrael.com/feed/',
+                'https://rss.jpost.com/rss/rssfeedsfrontpage.aspx',
+                'https://www.israelnationalnews.com/rss.aspx'
+            ];
+            
+            const results = document.getElementById('results');
+            
+            for (const feed of feeds) {
+                try {
+                    console.log(`Testing ${feed}...`);
+                    const response = await fetch(`${CORS_PROXY}${encodeURIComponent(feed)}`);
+                    const text = await response.text();
+                    
+                    // Parse XML
+                    const parser = new DOMParser();
+                    const xml = parser.parseFromString(text, 'text/xml');
+                    
+                    // Check for errors
+                    const parseError = xml.querySelector('parsererror');
+                    if (parseError) {
+                        results.innerHTML += `<p style="color: red;">❌ ${feed} - XML parse error</p>`;
+                        continue;
+                    }
+                    
+                    // Count items
+                    const items = xml.querySelectorAll('item');
+                    results.innerHTML += `<p style="color: green;">✅ ${feed} - Found ${items.length} items</p>`;
+                    
+                    // Show first 3 titles
+                    results.innerHTML += '<ul>';
+                    Array.from(items).slice(0, 3).forEach(item => {
+                        const title = item.querySelector('title')?.textContent || 'No title';
+                        results.innerHTML += `<li>${title}</li>`;
+                    });
+                    results.innerHTML += '</ul><hr>';
+                    
+                } catch (error) {
+                    results.innerHTML += `<p style="color: red;">❌ ${feed} - Error: ${error.message}</p>`;
+                    console.error(error);
+                }
+            }
+        }
+        
+        testAllOrigins();
+    </script>
+</body>
+</html>
