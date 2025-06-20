@@ -28,7 +28,7 @@ import { theme } from './theme';
 import { CommandBar } from './components/CommandBar';
 import { FilterBar } from './components/FilterBar';
 import { IntelCard } from './components/IntelCard';
-import { LiveRssService } from './services/liveRssService';
+import { RealTimeRssService } from './services/realTimeRssService';
 import { IntelItem, FeedFilter } from './types';
 
 const DRAWER_WIDTH = 240;
@@ -48,25 +48,25 @@ function App() {
     timeRange: 'all', // Show all time by default
   });
 
-  const rssService = LiveRssService.getInstance();
+  const rssService = RealTimeRssService.getInstance();
 
   const fetchIntelData = useCallback(async () => {
     try {
       setLoading(true);
-      console.log('Fetching REAL LIVE RSS feeds...');
-      const items = await rssService.fetchRealNews();
-      console.log(`Got ${items.length} REAL news items`);
+      console.log('Fetching LIVE news from RSS2JSON API...');
+      const items = await rssService.fetchLiveNews();
+      console.log(`Received ${items.length} live news items`);
+      
+      setIntelItems(items);
+      setLastUpdate(new Date());
       
       if (items.length === 0) {
-        setError('No live feeds available - check connection');
+        setError('No feeds available - API may be rate limited');
       } else {
-        setIntelItems(items);
         setError(null);
       }
-      
-      setLastUpdate(new Date());
     } catch (err) {
-      setError('Failed to fetch live RSS feeds');
+      setError('Failed to fetch news feeds');
       console.error('Fetch error:', err);
     } finally {
       setLoading(false);

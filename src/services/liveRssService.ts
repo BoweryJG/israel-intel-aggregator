@@ -57,7 +57,7 @@ export class LiveRssService {
       });
       
       // Sort by newest first
-      intelItems.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+      intelItems.sort((a: IntelItem, b: IntelItem) => b.timestamp.getTime() - a.timestamp.getTime());
       
       return intelItems;
     } catch (error) {
