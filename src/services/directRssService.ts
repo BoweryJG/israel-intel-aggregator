@@ -95,6 +95,14 @@ const RSS_SOURCES: RSSSource[] = [
 
 export class DirectRssService {
   private static instance: DirectRssService;
+  private cache: IntelItem[] = [];
+  private lastFetchTime: number = 0;
+  private CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+  private STORAGE_KEY = 'israel-intel-cache';
+
+  constructor() {
+    this.loadFromCache();
+  }
 
   static getInstance(): DirectRssService {
     if (!DirectRssService.instance) {
@@ -103,8 +111,44 @@ export class DirectRssService {
     return DirectRssService.instance;
   }
 
-  async fetchNews(): Promise<IntelItem[]> {
-    console.log('Fetching RSS feeds via CORS proxy...');
+  private loadFromCache(): void {
+    try {
+      const cached = localStorage.getItem(this.STORAGE_KEY);
+      if (cached) {
+        const { items, timestamp } = JSON.parse(cached);
+        // Convert date strings back to Date objects
+        this.cache = items.map((item: any) => ({
+          ...item,
+          timestamp: new Date(item.timestamp)
+        }));
+        this.lastFetchTime = timestamp;
+        console.log(`Loaded ${this.cache.length} items from cache`);
+      }
+    } catch (error) {
+      console.error('Error loading cache:', error);
+    }
+  }
+
+  private saveToCache(items: IntelItem[]): void {
+    try {
+      localStorage.setItem(this.STORAGE_KEY, JSON.stringify({
+        items: items.slice(0, 500), // Keep max 500 items to avoid storage limits
+        timestamp: Date.now()
+      }));
+    } catch (error) {
+      console.error('Error saving cache:', error);
+    }
+  }
+
+  async fetchNews(forceRefresh: boolean = false): Promise<IntelItem[]> {
+    // Return cached data if it's still fresh and not forcing refresh
+    const now = Date.now();
+    if (!forceRefresh && this.cache.length > 0 && (now - this.lastFetchTime) < this.CACHE_DURATION) {
+      console.log('Returning cached data');
+      return this.cache;
+    }
+
+    console.log('Fetching fresh RSS feeds via CORS proxy...');
     const allItems: IntelItem[] = [];
 
     for (const source of RSS_SOURCES) {
@@ -203,7 +247,17 @@ export class DirectRssService {
     allItems.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
     
     console.log(`Total items fetched: ${allItems.length}`);
+    
+    // Save to cache
+    this.cache = allItems;
+    this.lastFetchTime = Date.now();
+    this.saveToCache(allItems);
+    
     return allItems;
+  }
+
+  getCachedNews(): IntelItem[] {
+    return this.cache;
   }
 
   private createIntelItem(

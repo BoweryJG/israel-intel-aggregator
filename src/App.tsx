@@ -41,6 +41,7 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdate, setLastUpdate] = useState(new Date());
+  const [isUsingCache, setIsUsingCache] = useState(false);
   const [filter, setFilter] = useState<FeedFilter>({
     urgencyLevels: ['flash', 'priority', 'monitor', 'context'], // Show all by default
     contextTypes: [],
@@ -51,15 +52,25 @@ function App() {
 
   const rssService = DirectRssService.getInstance();
 
-  const fetchIntelData = useCallback(async () => {
+  const fetchIntelData = useCallback(async (forceRefresh: boolean = false) => {
     try {
-      setLoading(true);
+      // Show cached data immediately if available
+      const cachedItems = rssService.getCachedNews();
+      if (cachedItems.length > 0 && !forceRefresh) {
+        console.log(`Showing ${cachedItems.length} cached items`);
+        setIntelItems(cachedItems);
+        setLoading(false);
+        setIsUsingCache(true);
+      }
+      
+      // Fetch fresh data
       console.log('Fetching LIVE news via CORS proxy...');
-      const items = await rssService.fetchNews();
+      const items = await rssService.fetchNews(forceRefresh);
       console.log(`Received ${items.length} live news items`);
       
       setIntelItems(items);
       setLastUpdate(new Date());
+      setIsUsingCache(false);
       
       if (items.length === 0) {
         setError('No feeds available - API may be rate limited');
@@ -220,7 +231,7 @@ function App() {
       <Box sx={{ display: 'flex', minHeight: '100vh', backgroundColor: '#0A0A0A' }}>
         <CommandBar
           onMenuClick={() => setDrawerOpen(!drawerOpen)}
-          onRefresh={fetchIntelData}
+          onRefresh={() => fetchIntelData(true)}
           activeAlerts={activeAlerts}
           lastUpdate={lastUpdate}
         />
@@ -255,6 +266,14 @@ function App() {
           }}
         >
           <FilterBar filter={filter} onFilterChange={setFilter} />
+          
+          {isUsingCache && (
+            <Box sx={{ px: 3, py: 1 }}>
+              <Alert severity="info" sx={{ backgroundColor: 'rgba(33, 150, 243, 0.1)' }}>
+                Showing cached data. Fresh updates loading in background...
+              </Alert>
+            </Box>
+          )}
 
           <Container maxWidth={false} sx={{ py: 3, flexGrow: 1 }}>
             {loading && filteredItems.length === 0 ? (
