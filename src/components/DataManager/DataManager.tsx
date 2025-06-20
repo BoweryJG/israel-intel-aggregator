@@ -78,7 +78,7 @@ export const DataManager: React.FC<DataManagerProps> = ({ open, onClose, onDataU
   };
 
   const handleClearCache = () => {
-    if (confirm('Are you sure you want to clear all cached data?')) {
+    if (window.confirm('Are you sure you want to clear all cached data?')) {
       localStorage.removeItem('israel-intel-cache');
       alert('Cache cleared successfully');
       onDataUpdate();
