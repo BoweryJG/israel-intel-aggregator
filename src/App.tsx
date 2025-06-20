@@ -46,6 +46,7 @@ function App() {
     contextTypes: [],
     verificationStatus: [],
     timeRange: 'all', // Show all time by default
+    sourceTypes: [], // Empty means show all
   });
 
   const rssService = DirectRssService.getInstance();

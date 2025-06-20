@@ -40,8 +40,10 @@ const timeRangeOptions = [
 ];
 
 const sourceOptions = [
+  { value: 'all', label: 'ALL', color: '#FFFFFF' },
   { value: 'social', label: 'REDDIT', color: '#FF4500' },
   { value: 'media_t1', label: 'MEDIA', color: '#3A7AFE' },
+  { value: 'media_t2', label: 'ALT MEDIA', color: '#7B68EE' },
   { value: 'military', label: 'MILITARY', color: '#D4AF37' },
 ];
 
@@ -70,10 +72,29 @@ export const FilterBar: React.FC<FilterBarProps> = ({ filter, onFilterChange }) 
 
   const handleSourceChange = (
     event: React.MouseEvent<HTMLElement>,
-    newSourceTypes: SourceType[] | null
+    value: string
   ) => {
-    if (newSourceTypes !== null) {
-      onFilterChange({ ...filter, sourceTypes: newSourceTypes });
+    if (value === 'all') {
+      // Clear source filter to show all
+      onFilterChange({ ...filter, sourceTypes: [] });
+    } else {
+      // Toggle single source
+      const sourceType = value as SourceType;
+      const currentSources = filter.sourceTypes || [];
+      
+      if (currentSources.includes(sourceType)) {
+        // Remove if already selected
+        onFilterChange({ 
+          ...filter, 
+          sourceTypes: currentSources.filter(s => s !== sourceType) 
+        });
+      } else {
+        // Add to selection
+        onFilterChange({ 
+          ...filter, 
+          sourceTypes: [...currentSources, sourceType] 
+        });
+      }
     }
   };
 
@@ -136,40 +157,35 @@ export const FilterBar: React.FC<FilterBarProps> = ({ filter, onFilterChange }) 
           <Typography variant="caption" sx={{ color: 'text.secondary', minWidth: 80 }}>
             SOURCE:
           </Typography>
-          <ToggleButtonGroup
-            value={filter.sourceTypes || []}
-            onChange={handleSourceChange}
-            aria-label="source types"
-            size="small"
-            sx={{
-              '& .MuiToggleButton-root': {
-                px: 2,
-                py: 0.5,
-                fontSize: '0.75rem',
-                fontWeight: 600,
-                backgroundColor: '#1F1F1F',
-                '&.Mui-selected': {
-                  backgroundColor: 'transparent',
-                },
-              },
-            }}
-          >
+          <Stack direction="row" spacing={1}>
             {sourceOptions.map((option) => (
               <ToggleButton
                 key={option.value}
                 value={option.value}
+                selected={
+                  option.value === 'all' 
+                    ? (filter.sourceTypes || []).length === 0 
+                    : (filter.sourceTypes || []).includes(option.value as SourceType)
+                }
+                onClick={(e) => handleSourceChange(e, option.value)}
+                size="small"
                 sx={{
+                  px: 2,
+                  py: 0.5,
+                  fontSize: '0.75rem',
+                  fontWeight: 600,
+                  backgroundColor: '#1F1F1F',
                   '&.Mui-selected': {
                     color: option.color,
                     borderColor: option.color,
-                    backgroundColor: `${option.color}20 !important`,
+                    backgroundColor: `${option.color}20`,
                   },
                 }}
               >
                 {option.label}
               </ToggleButton>
             ))}
-          </ToggleButtonGroup>
+          </Stack>
         </Stack>
 
         <Stack direction="row" spacing={2} alignItems="center">
@@ -208,12 +224,14 @@ export const FilterBar: React.FC<FilterBarProps> = ({ filter, onFilterChange }) 
 
           <Stack direction="row" spacing={1}>
             <ToggleButton
-              value="reddit-only"
+              value="reddit-focus"
+              selected={(filter.sourceTypes || []).length === 1 && (filter.sourceTypes || [])[0] === 'social'}
               onClick={() => {
+                const isRedditOnly = (filter.sourceTypes || []).length === 1 && (filter.sourceTypes || [])[0] === 'social';
                 onFilterChange({ 
                   ...filter, 
-                  sourceTypes: ['social'],
-                  timeRange: 'day'
+                  sourceTypes: isRedditOnly ? [] : ['social'],
+                  timeRange: isRedditOnly ? filter.timeRange : 'day'
                 });
               }}
               sx={{
@@ -227,11 +245,15 @@ export const FilterBar: React.FC<FilterBarProps> = ({ filter, onFilterChange }) 
                 '&:hover': {
                   backgroundColor: '#FF6600',
                 },
+                '&.Mui-selected': {
+                  backgroundColor: '#FF6600',
+                  borderColor: '#FF6600',
+                },
               }}
             >
               <Stack direction="row" spacing={0.5} alignItems="center">
                 <span>🔥</span>
-                <span>REDDIT ONLY</span>
+                <span>REDDIT FOCUS</span>
               </Stack>
             </ToggleButton>
             
