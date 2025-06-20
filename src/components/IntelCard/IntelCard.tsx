@@ -93,7 +93,7 @@ export const IntelCard: React.FC<IntelCardProps> = ({ item, onClick }) => {
           },
         }}
       >
-        <CardContent sx={{ p: 3 }}>
+        <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
           <Stack spacing={2}>
             <Box display="flex" justifyContent="space-between" alignItems="flex-start">
               <Box flex={1}>
@@ -132,7 +132,14 @@ export const IntelCard: React.FC<IntelCardProps> = ({ item, onClick }) => {
                   )}
                 </Stack>
                 
-                <Typography variant="h6" sx={{ mb: 1, fontWeight: 600 }}>
+                <Typography 
+                  variant="h6" 
+                  sx={{ 
+                    mb: 1, 
+                    fontWeight: 600,
+                    fontSize: { xs: '1rem', sm: '1.25rem' }
+                  }}
+                >
                   {item.title}
                 </Typography>
                 

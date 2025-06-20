@@ -109,9 +109,26 @@ export const FilterBar: React.FC<FilterBarProps> = ({ filter, onFilterChange }) 
         borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
       }}
     >
-      <Stack spacing={2}>
-        <Stack direction="row" spacing={2} alignItems="center">
-          <Typography variant="caption" sx={{ color: 'text.secondary', minWidth: 80 }}>
+      <Stack spacing={2} sx={{ 
+        '@media (max-width: 768px)': {
+          '& > *': {
+            flexWrap: 'wrap',
+          }
+        }
+      }}>
+        <Stack 
+          direction={{ xs: 'column', sm: 'row' }} 
+          spacing={2} 
+          alignItems={{ xs: 'flex-start', sm: 'center' }}
+        >
+          <Typography 
+            variant="caption" 
+            sx={{ 
+              color: 'text.secondary', 
+              minWidth: { xs: 60, sm: 80 },
+              display: { xs: 'none', sm: 'block' }
+            }}
+          >
             URGENCY:
           </Typography>
           <ToggleButtonGroup
@@ -120,10 +137,11 @@ export const FilterBar: React.FC<FilterBarProps> = ({ filter, onFilterChange }) 
             aria-label="urgency levels"
             size="small"
             sx={{
+              flexWrap: { xs: 'wrap', sm: 'nowrap' },
               '& .MuiToggleButton-root': {
-                px: 2,
+                px: { xs: 1, sm: 2 },
                 py: 0.5,
-                fontSize: '0.75rem',
+                fontSize: { xs: '0.7rem', sm: '0.75rem' },
                 fontWeight: 600,
                 backgroundColor: '#1F1F1F',
                 '&.Mui-selected': {
@@ -313,7 +331,14 @@ export const FilterBar: React.FC<FilterBarProps> = ({ filter, onFilterChange }) 
           </Stack>
         </Stack>
         
-        <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
+        <Stack 
+          direction="row" 
+          spacing={1} 
+          sx={{ 
+            mt: 1,
+            display: { xs: 'none', md: 'flex' }
+          }}
+        >
           <Typography variant="caption" sx={{ color: 'text.secondary', mr: 1 }}>
             QUICK SEARCH:
           </Typography>

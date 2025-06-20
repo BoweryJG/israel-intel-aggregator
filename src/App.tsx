@@ -144,38 +144,71 @@ function App() {
   const drawer = (
     <Box sx={{ pt: 2 }}>
       <List>
-        <ListItem sx={{ backgroundColor: 'rgba(212, 175, 55, 0.1)' }}>
+        <ListItem 
+          sx={{ 
+            backgroundColor: 'rgba(212, 175, 55, 0.1)',
+            cursor: 'pointer'
+          }}
+          onClick={() => {
+            setDrawerOpen(false);
+            window.scrollTo(0, 0);
+          }}
+        >
           <ListItemIcon>
             <DashboardIcon sx={{ color: '#D4AF37' }} />
           </ListItemIcon>
           <ListItemText primary="Intel Feed" />
         </ListItem>
-        <ListItem>
+        <ListItem
+          sx={{ cursor: 'pointer', opacity: 0.5 }}
+          onClick={() => {
+            setDrawerOpen(false);
+            alert('Threat Map coming soon - will show geographic distribution of incidents');
+          }}
+        >
           <ListItemIcon>
             <MapIcon />
           </ListItemIcon>
-          <ListItemText primary="Threat Map" />
+          <ListItemText primary="Threat Map" secondary="Coming Soon" />
         </ListItem>
-        <ListItem>
+        <ListItem
+          sx={{ cursor: 'pointer', opacity: 0.5 }}
+          onClick={() => {
+            setDrawerOpen(false);
+            alert('Timeline view coming soon - will show chronological event progression');
+          }}
+        >
           <ListItemIcon>
             <TimelineIcon />
           </ListItemIcon>
-          <ListItemText primary="Timeline" />
+          <ListItemText primary="Timeline" secondary="Coming Soon" />
         </ListItem>
-        <ListItem>
+        <ListItem
+          sx={{ cursor: 'pointer', opacity: 0.5 }}
+          onClick={() => {
+            setDrawerOpen(false);
+            alert('Analytics coming soon - will show trends and patterns in conflict data');
+          }}
+        >
           <ListItemIcon>
             <AnalyticsIcon />
           </ListItemIcon>
-          <ListItemText primary="Analytics" />
+          <ListItemText primary="Analytics" secondary="Coming Soon" />
         </ListItem>
       </List>
       <Divider sx={{ my: 2 }} />
       <List>
-        <ListItem>
+        <ListItem
+          sx={{ cursor: 'pointer', opacity: 0.5 }}
+          onClick={() => {
+            setDrawerOpen(false);
+            alert('Settings coming soon - will allow customization of alerts and notifications');
+          }}
+        >
           <ListItemIcon>
             <SettingsIcon />
           </ListItemIcon>
-          <ListItemText primary="Settings" />
+          <ListItemText primary="Settings" secondary="Coming Soon" />
         </ListItem>
       </List>
     </Box>
