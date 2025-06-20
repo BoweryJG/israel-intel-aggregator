@@ -41,7 +41,13 @@ const RSS_SOURCES: RSSSource[] = [
   },
 ];
 
-const CORS_PROXY = 'https://api.allorigins.win/get?url=';
+// Try multiple CORS proxies in case one fails
+const CORS_PROXIES = [
+  '/.netlify/functions/rss-proxy?url=', // Our Netlify function (production)
+  '/api/rss-proxy?url=', // Local proxy fallback
+  'https://corsproxy.io/?',
+  'https://api.codetabs.com/v1/proxy?quest=',
+];
 
 export class RSSService {
   private static instance: RSSService;
@@ -55,11 +61,35 @@ export class RSSService {
     return RSSService.instance;
   }
 
+  private async fetchWithProxy(url: string, proxyIndex: number = 0): Promise<any> {
+    if (proxyIndex >= CORS_PROXIES.length) {
+      throw new Error('All CORS proxies failed');
+    }
+    
+    try {
+      const proxyUrl = CORS_PROXIES[proxyIndex];
+      const fullUrl = `${proxyUrl}${encodeURIComponent(url)}`;
+      const response = await axios.get(fullUrl, { timeout: 10000 });
+      
+      // Handle different proxy response formats
+      if (response.data.contents) {
+        return response.data.contents;
+      } else if (typeof response.data === 'string') {
+        return response.data;
+      } else {
+        return JSON.stringify(response.data);
+      }
+    } catch (error) {
+      console.warn(`Proxy ${CORS_PROXIES[proxyIndex]} failed, trying next...`);
+      return this.fetchWithProxy(url, proxyIndex + 1);
+    }
+  }
+
   private async fetchRSSFeed(source: RSSSource): Promise<IntelItem[]> {
     try {
-      const response = await axios.get(`${CORS_PROXY}${encodeURIComponent(source.url)}`);
+      const xmlContent = await this.fetchWithProxy(source.url);
       const parser = new DOMParser();
-      const xmlDoc = parser.parseFromString(response.data.contents, 'text/xml');
+      const xmlDoc = parser.parseFromString(xmlContent, 'text/xml');
       
       const items = xmlDoc.querySelectorAll('item');
       const intelItems: IntelItem[] = [];

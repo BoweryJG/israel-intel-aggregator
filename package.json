@@ -18,6 +18,8 @@
     "axios": "^1.10.0",
     "date-fns": "^4.1.0",
     "framer-motion": "^12.18.1",
+    "http-proxy-middleware": "^3.0.5",
+    "node-fetch": "^2.7.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-scripts": "5.0.1",
@@ -51,7 +53,6 @@
       "last 1 safari version"
     ]
   },
-  "proxy": "https://api.allorigins.win",
   "devDependencies": {
     "@types/stylis": "^4.2.7"
   }
