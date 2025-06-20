@@ -4,7 +4,6 @@ import {
   CssBaseline,
   Box,
   Container,
-  Grid,
   CircularProgress,
   Typography,
   Drawer,
@@ -112,7 +111,7 @@ function App() {
   const drawer = (
     <Box sx={{ pt: 2 }}>
       <List>
-        <ListItem selected>
+        <ListItem sx={{ backgroundColor: 'rgba(212, 175, 55, 0.1)' }}>
           <ListItemIcon>
             <DashboardIcon sx={{ color: '#D4AF37' }} />
           </ListItemIcon>
@@ -208,25 +207,24 @@ function App() {
                 </Typography>
               </Box>
             ) : (
-              <Grid container spacing={3}>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                 <AnimatePresence>
                   {filteredItems.map((item, index) => (
-                    <Grid item xs={12} key={item.id}>
-                      <motion.div
-                        initial={{ opacity: 0, y: 50 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -50 }}
-                        transition={{ delay: index * 0.05 }}
-                      >
-                        <IntelCard
-                          item={item}
-                          onClick={() => window.open(item.source.url, '_blank')}
-                        />
-                      </motion.div>
-                    </Grid>
+                    <motion.div
+                      key={item.id}
+                      initial={{ opacity: 0, y: 50 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -50 }}
+                      transition={{ delay: index * 0.05 }}
+                    >
+                      <IntelCard
+                        item={item}
+                        onClick={() => window.open(item.source.url, '_blank')}
+                      />
+                    </motion.div>
                   ))}
                 </AnimatePresence>
-              </Grid>
+              </Box>
             )}
           </Container>
         </Box>
