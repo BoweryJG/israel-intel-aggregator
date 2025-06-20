@@ -236,7 +236,7 @@ export class RealTimeRssService {
       }
     });
     
-    return [...new Set(tags)]; // Remove duplicates
+    return Array.from(new Set(tags)); // Remove duplicates
   }
 
   private deduplicateItems(items: IntelItem[]): IntelItem[] {
