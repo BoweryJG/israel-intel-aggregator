@@ -29,13 +29,13 @@ const RSS_SOURCES: RSSSource[] = [
     type: 'media_t1',
   },
   {
-    url: 'https://www.israelnationalnews.com/rss.aspx',
+    url: 'https://www.israelnationalnews.com/rss',
     name: 'Arutz Sheva',
     type: 'media_t2',
   },
   {
-    url: 'https://www.haaretz.com/cmlink/1.4537136',
-    name: 'Haaretz',
+    url: 'https://www.ynetnews.com/Integration/StoryRss2.xml',
+    name: 'Ynet News',
     type: 'media_t1',
   },
   // International Coverage
@@ -87,8 +87,8 @@ const RSS_SOURCES: RSSSource[] = [
     type: 'military',
   },
   {
-    url: 'https://www.janes.com/feeds/news',
-    name: 'Janes Defense',
+    url: 'https://www.timesofisrael.com/feed/category/defense/',
+    name: 'Times of Israel Defense',
     type: 'military',
   },
 ];
